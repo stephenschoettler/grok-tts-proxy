@@ -1,0 +1,34 @@
+# Systemd user service for grok-tts-proxy
+#
+# Install:
+#   cp grok-tts-proxy.service ~/.config/systemd/user/
+#   # Edit EnvironmentFile and ExecStart paths below to match your setup
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now grok-tts-proxy
+#
+# Logs:
+#   journalctl --user -u grok-tts-proxy -f
+
+[Unit]
+Description=Grok TTS Proxy (OpenAI-compatible → xAI Grok TTS API)
+After=network.target
+
+[Service]
+Type=simple
+
+# Path to your .env file containing XAI_API_KEY
+EnvironmentFile=%h/.config/grok-tts-proxy.env
+
+# Optional: override the port (default 7902)
+# Environment=GROK_TTS_PORT=7902
+
+# Update this path to wherever you placed grok-tts-proxy.py
+ExecStart=/usr/bin/python3 %h/grok-tts-proxy/grok-tts-proxy.py
+
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
