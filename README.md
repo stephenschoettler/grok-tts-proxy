@@ -19,7 +19,7 @@ Zero external dependencies. Single Python file. ~150 lines.
 ### 1. Clone / copy the script
 
 ```bash
-git clone <this-repo> grok-tts-proxy
+git clone https://github.com/stephenschoettler/grok-tts-proxy.git
 cd grok-tts-proxy
 ```
 
