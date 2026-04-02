@@ -10,13 +10,13 @@ Drop it in front of any app that already speaks the OpenAI TTS API — Home Assi
 
 xAI's TTS API (`https://api.x.ai/v1/tts`) uses a slightly different request shape than OpenAI's `/v1/audio/speech`. This proxy translates the OpenAI format to Grok's format so you can point any OpenAI-TTS-compatible tool at `http://localhost:7902` and it just works.
 
-Zero external dependencies. Single Python file. ~150 lines.
+Zero external dependencies. Single Python file. 140 lines.
 
 ---
 
 ## Quickstart
 
-### 1. Clone / copy the script
+### 1. Clone
 
 ```bash
 git clone https://github.com/stephenschoettler/grok-tts-proxy.git
@@ -43,26 +43,28 @@ The proxy listens on **port 7902** by default.
 
 ## Environment variables
 
-| Variable        | Default                      | Description                          |
-|-----------------|------------------------------|--------------------------------------|
-| `XAI_API_KEY`   | *(required)*                 | Your xAI API key                     |
-| `GROK_TTS_PORT` | `7902`                       | Port the proxy listens on            |
+| Variable        | Default      | Description                |
+|-----------------|--------------|----------------------------|
+| `XAI_API_KEY`   | *(required)* | Your xAI API key           |
+| `GROK_TTS_PORT` | `7902`       | Port the proxy listens on  |
 
 ---
 
-## Supported voices
+## Voices
 
-Grok TTS supports these voice IDs. Pass any of them in the `voice` field:
+Five expressive voices, each with a distinct personality:
 
-| Voice ID | Character        |
-|----------|-----------------|
-| `leo`    | Male, natural   |
-| `eve`    | Female, natural |
-| `ara`    | Female          |
-| `rex`    | Male            |
-| `sal`    | Male            |
+| Voice ID | Tone | Best for |
+|----------|------|----------|
+| **`eve`** | Energetic, upbeat | Demos, announcements, upbeat content (default) |
+| **`ara`** | Warm, friendly | Conversational interfaces, customer support |
+| **`rex`** | Confident, clear | Business presentations, tutorials |
+| **`sal`** | Smooth, balanced | Versatile — works across content types |
+| **`leo`** | Authoritative, strong | Instructions, narration, educational content |
 
-You can pass any voice ID directly — the proxy passes unknown voices through unchanged. The `VOICE_MAP` dict in the script lets you alias OpenAI voice names (e.g. map `"alloy"` → `"leo"`).
+Voice IDs are case-insensitive. The proxy passes unknown voices through unchanged, and the `VOICE_MAP` dict in the script lets you alias OpenAI voice names (e.g. map `"alloy"` → `"leo"`).
+
+[Preview all voices →](https://x.ai/api/voice)
 
 ---
 
@@ -83,10 +85,26 @@ OpenAI-compatible endpoint.
 ```
 
 - `model` — ignored (Grok only has one TTS model)
-- `input` — the text to synthesize *(required)*
+- `input` — the text to synthesize *(required, max 15,000 characters)*
 - `voice` — Grok voice ID, or an alias defined in `VOICE_MAP`
 
-**Response:** raw audio bytes (`audio/mpeg` or whatever Grok returns)
+**Response:** raw audio bytes (MP3 at 24 kHz / 128 kbps by default)
+
+### Speech tags
+
+Grok TTS supports inline expression tags that pass straight through the proxy:
+
+```json
+{"input": "So I walked in and [pause] there it was. [laugh] I could not believe it!"}
+```
+
+```json
+{"input": "I need to tell you something. <whisper>It is a secret.</whisper> Pretty cool, right?"}
+```
+
+**Inline tags:** `[laugh]`, `[chuckle]`, `[cry]`, `[sigh]`, `[gasp]`, `[pause]`, `[cough]`, `[sniffle]`, `[groan]`
+
+**Wrapping tags:** `<whisper>`, `<shout>`, `<sing>`, `<fast>`, `<slow>`, `<high_pitch>`, `<low_pitch>`
 
 ### `GET /health`
 
@@ -103,7 +121,7 @@ curl http://localhost:7902/v1/audio/speech \
   -d '{"model":"tts-1","input":"Hello from Grok!","voice":"eve"}' \
   --output hello.mp3
 
-mpv hello.mp3   # or: aplay hello.mp3 / ffplay hello.mp3
+mpv hello.mp3   # or: aplay, ffplay, vlc, etc.
 ```
 
 ---
@@ -128,9 +146,9 @@ with client.audio.speech.with_streaming_response.create(
     response.stream_to_file("output.mp3")
 ```
 
-### Hermes (OpenClaw TTS plugin)
+### Hermes / OpenClaw
 
-In your Hermes / OpenClaw TTS config, set:
+In your TTS config, set:
 
 ```
 TTS Provider: OpenAI-compatible
@@ -146,6 +164,14 @@ Settings → Audio → TTS:
 - **API Base URL:** `http://localhost:7902/v1`
 - **API Key:** `not-used`
 - **Voice:** `leo`
+
+---
+
+## Supported languages
+
+Grok TTS supports 20 languages. The proxy passes `language` as `"en"` by default — edit the `grok_payload` dict in the script to change it.
+
+`en` · `zh` · `ja` · `ko` · `de` · `fr` · `it` · `es-ES` · `es-MX` · `pt-BR` · `pt-PT` · `ru` · `tr` · `hi` · `bn` · `id` · `vi` · `ar-EG` · `ar-SA` · `ar-AE` · `auto`
 
 ---
 
@@ -171,7 +197,15 @@ journalctl --user -u grok-tts-proxy -f
 
 ## No external dependencies
 
-The proxy uses only Python 3 standard library modules (`http.server`, `urllib`, `json`, `os`, `sys`). No `pip install` needed.
+Python 3 standard library only (`http.server`, `urllib`, `json`, `os`, `sys`). No `pip install` needed.
+
+---
+
+## Links
+
+- [xAI TTS documentation](https://docs.x.ai/developers/model-capabilities/audio/text-to-speech)
+- [Voice demos & playground](https://x.ai/api/voice)
+- [Get an xAI API key](https://console.x.ai/team/default/api-keys)
 
 ---
 
